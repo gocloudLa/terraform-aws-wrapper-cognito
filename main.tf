@@ -45,7 +45,11 @@ module "cognito" {
   string_schemas = try(each.value.string_schemas, var.cognito_defaults.string_schemas, [])
   number_schemas = try(each.value.number_schemas, var.cognito_defaults.number_schemas, [])
 
-  domain = try(each.value.domain, var.cognito_defaults.domain, null)
+  domain                 = try(each.value.domain, var.cognito_defaults.domain, null)
+  domain_certificate_arn = try(each.value.domain_certificate_arn, var.cognito_defaults.domain_certificate_arn, null)
+
+  ui_customization_css        = try(each.value.ui_customization_css, var.cognito_defaults.ui_customization_css, null)
+  ui_customization_image_file = try(each.value.ui_customization_image_file, var.cognito_defaults.ui_customization_image_file, null)
 
   clients = try(each.value.clients, var.cognito_defaults.clients, [])
 

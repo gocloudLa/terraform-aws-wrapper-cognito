@@ -24,6 +24,18 @@ variable "email_verification_subject" {
   default     = null
 }
 
+variable "ui_customization_css" {
+  description = "CSS values in the UI customization for the hosted UI domain"
+  type        = string
+  default     = null
+}
+
+variable "ui_customization_image_file" {
+  description = "Image file for the hosted UI logo (Base64-encoded)"
+  type        = string
+  default     = null
+}
+
 # username_configuration
 variable "username_configuration" {
   description = "The Username Configuration. Setting `case_sensitive` specifies whether username case sensitivity will be applied for all users in the user pool through Cognito APIs"

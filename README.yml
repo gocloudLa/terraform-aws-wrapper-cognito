@@ -180,6 +180,44 @@ features:
             }
           }
           ```
+  - icon: "🎨"
+    title: "Hosted UI Domain and Branding"
+    short_description: "Custom domains with ACM certificates and hosted UI CSS/logo customization."
+    long_description: |
+      Set `domain_certificate_arn` for a custom domain (ACM certificate in us-east-1).
+      Pool-level branding uses `ui_customization_css` and `ui_customization_image_file` on each `cognito_parameters` entry.
+      Optional per-app-client overrides use the same keys inside a `clients` entry when different branding is required.
+      UI customization requires an `aws_cognito_user_pool_domain` for the pool.
+    examples:
+      - title: "Custom domain with pool-level UI branding"
+        code: |
+          ```hcl
+          cognito_parameters = {
+            "client-employee" = {
+              domain                 = "auth.mydomain.com"
+              domain_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/resource-01xxxxxxxxxxxxx"
+              ui_customization_css        = ".banner-customizable { background-color: #003366; }"
+              ui_customization_image_file = filebase64("logo.png")
+            }
+          }
+          ```
+      - title: "Per-client UI branding override"
+        code: |
+          ```hcl
+          cognito_parameters = {
+            "client-employee" = {
+              domain = "client-employee"
+              clients = [
+                {
+                  name                        = "client-employee"
+                  callback_urls               = ["https://mydomain.com/callback"]
+                  ui_customization_css        = ".label-customizable { color: #003366; }"
+                  ui_customization_image_file = filebase64("client-logo.png")
+                }
+              ]
+            }
+          }
+          ```
   - icon: "λ"
     title: "Lambda Triggers"
     short_description: "Deploys trigger Lambdas and wires them to the user pool."
@@ -234,6 +272,8 @@ features:
 important_notes: |
   - **⚠️ Lambda ordering:** User pool Lambda triggers and IAM policies that reference the pool ARN are created in separate apply steps to break the Cognito–Lambda dependency cycle. Expect a two-phase apply when adding or changing triggers.
   - **ℹ️ Lambda names:** Values in `lambda_config` must match keys under `lambdas` for the same pool entry (e.g. `post_confirmation = "migrate-user"` references `lambdas.migrate-user`).
+  - **ℹ️ Custom domain:** `domain_certificate_arn` must reference an ISSUED ACM certificate in `us-east-1`, even when the user pool is in another region.
+  - **ℹ️ UI customization:** Hosted UI branding is applied after the user pool domain exists; set `domain` (or `domain` + `domain_certificate_arn`) before expecting CSS or logo changes.
   - **🔒 Client secrets:** App client secrets are sensitive outputs from the child module; consume them via Terraform state or a secrets manager, not plain outputs in CI logs.
 input_table: |
   | alias_attributes | Attributes supported as aliases (e.g. email, phone_number). | `list` | `["email", "phone_number"]` | no |
@@ -253,8 +293,11 @@ input_table: |
   | schemas | Combined custom attribute schemas. | `list` | `[]` | no |
   | string_schemas | String-type custom attribute schemas. | `list` | `[]` | no |
   | number_schemas | Number-type custom attribute schemas. | `list` | `[]` | no |
-  | domain | Hosted UI domain prefix for the user pool. | `string` | `null` | no |
-  | clients | App client definitions (OAuth, auth flows, callbacks). | `list` | `[]` | no |
+  | domain | Hosted UI domain prefix or custom domain name for the user pool. | `string` | `null` | no |
+  | domain_certificate_arn | ACM certificate ARN in us-east-1 for a custom domain. | `string` | `null` | no |
+  | ui_customization_css | CSS applied to the hosted UI at pool level (domain default). | `string` | `null` | no |
+  | ui_customization_image_file | Base64-encoded logo for the hosted UI at pool level. | `string` | `null` | no |
+  | clients | App client definitions (OAuth, auth flows, callbacks; optional `ui_customization_*` override). | `list` | `[]` | no |
   | user_groups | Cognito user group definitions. | `list` | `[]` | no |
   | resource_servers | Resource server and OAuth scope definitions. | `list` | `[]` | no |
   | identity_providers | SAML/OIDC/social identity provider definitions. | `list` | `[]` | no |
