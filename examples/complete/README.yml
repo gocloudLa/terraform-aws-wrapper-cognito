@@ -1,0 +1,7 @@
+title: "Complete Example"
+description: "Demonstrates Cognito user pools with SAML federation, OAuth clients, custom attributes, and Lambda triggers."
+main_purpose: "Configure multiple user pools with identity providers, app clients, hosted UI domains, and optional Lambda triggers."
+key_features:
+  - "**User Pools**: Employee pool with SAML Active Directory and custom string schemas."
+  - "**App Clients**: OAuth authorization-code flow with callback URLs per pool."
+  - "**Lambda Triggers**: VPC-attached migrate-user trigger for the members pool."
