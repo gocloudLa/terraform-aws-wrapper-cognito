@@ -79,22 +79,22 @@ module "wrapper_cognito" {
         }
       ]
 
-      identity_providers = [
-        {
-          provider_name = "ActiveDirectory"
-          provider_type = "SAML"
-
-          provider_details = {
-            MetadataURL = "https://client.domain.com/federationmetadata/2007-06/federationmetadata.xml"
-          }
-
-          # URLs no disponibles
-          attribute_mapping = {
-            email = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-            name  = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"
-          }
-        }
-      ]
+      # SAML IdP — requires a reachable MetadataURL at apply time; uncomment with a real endpoint.
+      # identity_providers = [
+      #   {
+      #     provider_name = "ActiveDirectory"
+      #     provider_type = "SAML"
+      #
+      #     provider_details = {
+      #       MetadataURL = "https://client.domain.com/federationmetadata/2007-06/federationmetadata.xml"
+      #     }
+      #
+      #     attribute_mapping = {
+      #       email = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+      #       name  = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"
+      #     }
+      #   }
+      # ]
 
       clients = [
         {
@@ -106,7 +106,7 @@ module "wrapper_cognito" {
             "ALLOW_USER_SRP_AUTH",
             "ALLOW_USER_PASSWORD_AUTH"
           ]
-          supported_identity_providers         = ["ActiveDirectory"]
+          supported_identity_providers         = ["COGNITO"] # Default with IdP commented: ["ActiveDirectory"]
           allowed_oauth_flows_user_pool_client = true
           allowed_oauth_flows                  = ["code"]
           callback_urls = [
@@ -214,9 +214,12 @@ module "wrapper_cognito" {
             LOG_LEVEL  = "info"
             LEGACY_API = "https://api.example.com"
           }
-          attach_network_policy  = true
-          vpc_subnet_ids         = data.aws_subnets.private.ids
-          vpc_security_group_ids = [data.aws_security_group.default.id]
+          attach_vpc = true
+          # vpc_name       = "dmc-lab"            # Default: local.default_vpc_name
+          # subnet_name    = "dmc-lab-public*"   # Default: local.default_subnet_private_name
+          # security_group = "dmc-lab-default"    # Default: local.default_security_group
+          # vpc_subnet_ids         = ["subnet-01xxxxxxxxxxxxxxxxx"]
+          # vpc_security_group_ids = ["sg-01xxxxxxxxxxxxxxxxx"]
           cognito_policy_statements = {
             AdminGetUser = {
               effect  = "Allow"

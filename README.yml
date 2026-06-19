@@ -104,11 +104,9 @@ quick_start: |
 
       lambdas = {
         "migrate-user" = {
-          runtime                = "provided.al2"
-          handler                = "member-migrate-user"
-          attach_network_policy  = true
-          vpc_subnet_ids         = data.aws_subnets.private.ids
-          vpc_security_group_ids = [data.aws_security_group.default.id]
+          runtime    = "provided.al2"
+          handler    = "member-migrate-user"
+          attach_vpc = true
         }
       }
     }
@@ -236,11 +234,9 @@ features:
               }
               lambdas = {
                 "migrate-user" = {
-                  runtime                = "provided.al2"
-                  handler                = "member-migrate-user"
-                  attach_network_policy  = true
-                  vpc_subnet_ids         = data.aws_subnets.private.ids
-                  vpc_security_group_ids = [data.aws_security_group.default.id]
+                  runtime    = "provided.al2"
+                  handler    = "member-migrate-user"
+                  attach_vpc = true
                 }
               }
             }
@@ -272,6 +268,7 @@ features:
 important_notes: |
   - **⚠️ Lambda ordering:** User pool Lambda triggers and IAM policies that reference the pool ARN are created in separate apply steps to break the Cognito–Lambda dependency cycle. Expect a two-phase apply when adding or changing triggers.
   - **ℹ️ Lambda names:** Values in `lambda_config` must match keys under `lambdas` for the same pool entry (e.g. `post_confirmation = "migrate-user"` references `lambdas.migrate-user`).
+  - **ℹ️ Lambda VPC:** Set `attach_vpc = true` under `lambdas` to resolve VPC, subnets, and security group from platform defaults. Override with `vpc_name`, `subnet_name`, `security_group`, or explicit `vpc_subnet_ids` / `vpc_security_group_ids`.
   - **ℹ️ Custom domain:** `domain_certificate_arn` must reference an ISSUED ACM certificate in `us-east-1`, even when the user pool is in another region.
   - **ℹ️ UI customization:** Hosted UI branding is applied after the user pool domain exists; set `domain` (or `domain` + `domain_certificate_arn`) before expecting CSS or logo changes.
   - **ℹ️ Username attributes:** `username_attributes` and `alias_attributes` are mutually exclusive in Cognito; set only one per pool.
@@ -310,5 +307,5 @@ input_table: |
   | user_groups | Cognito user group definitions. | `list` | `[]` | no |
   | resource_servers | Resource server and OAuth scope definitions. | `list` | `[]` | no |
   | identity_providers | SAML/OIDC/social identity provider definitions. | `list` | `[]` | no |
-  | lambdas | Lambda trigger function definitions keyed by trigger name. | `map` | `null` | no |
+  | lambdas | Lambda definitions (`attach_vpc`, `source_path`, `runtime`, `cognito_policy_statements`, etc.). | `map` | `null` | no |
   | tags | Additional tags merged with platform common tags. | `map` | `null` | no |

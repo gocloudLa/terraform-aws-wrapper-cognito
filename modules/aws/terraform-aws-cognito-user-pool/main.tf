@@ -60,7 +60,7 @@ resource "aws_cognito_user_pool" "pool" {
 
   # lambda_config
   dynamic "lambda_config" {
-    for_each = var.lambda_config == null || length(var.lambda_config) == 0 ? [] : [1]
+    for_each = var.lambda_config != null && length(var.lambda_config) > 0 ? [1] : []
     content {
       create_auth_challenge          = lookup(var.lambda_config, "create_auth_challenge", var.lambda_config_create_auth_challenge)
       custom_message                 = lookup(var.lambda_config, "custom_message", var.lambda_config_custom_message)

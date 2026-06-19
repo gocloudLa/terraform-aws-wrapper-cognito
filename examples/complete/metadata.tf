@@ -5,7 +5,7 @@ locals {
     environment    = "Laboratory"
     project        = "Example"
     public_domain  = "democorp.cloud"
-    private_domain = "democorp"
+    private_domain = "democorp.private"
 
     key = {
       company = "dmc"

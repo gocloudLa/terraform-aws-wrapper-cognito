@@ -28,7 +28,7 @@ module "cognito" {
   user_attribute_update_settings = try(each.value.user_attribute_update_settings, var.cognito_defaults.user_attribute_update_settings, null)
   recovery_mechanisms            = try(each.value.recovery_mechanisms, var.cognito_defaults.recovery_mechanisms, [])
 
-  lambda_config = {
+  lambda_config = try(each.value.lambda_config, null) != null ? {
     create_auth_challenge          = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.create_auth_challenge, var.cognito_defaults.lambda_config.create_auth_challenge, "")}"].lambda_function_arn, null)
     custom_message                 = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.custom_message, var.cognito_defaults.lambda_config.custom_message, "")}"].lambda_function_arn, null)
     define_auth_challenge          = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.define_auth_challenge, var.cognito_defaults.lambda_config.define_auth_challenge, "")}"].lambda_function_arn, null)
@@ -42,7 +42,7 @@ module "cognito" {
     kms_key_id                     = try(each.value.lambda_config.kms_key_id, var.cognito_defaults.lambda_config.kms_key_id, null)
     custom_email_sender            = try(each.value.lambda_config.custom_email_sender, var.cognito_defaults.lambda_config.custom_email_sender, {})
     custom_sms_sender              = try(each.value.lambda_config.custom_sms_sender, var.cognito_defaults.lambda_config.custom_sms_sender, {})
-  }
+  } : null
 
   password_policy = try(each.value.password_policy, var.cognito_defaults.password_policy, null)
 

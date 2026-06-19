@@ -15,6 +15,62 @@ locals {
     if try(resource_values.lambdas, var.cognito_defaults.lambdas, null) != null
   ]
   cognito_lambdas = merge(local.cognito_lambdas_tmp...)
+
+  cognito_lambdas_vpc_tmp = [
+    for resource_name, resource_values in var.cognito_parameters :
+    [
+      for lambda_name, lambda_values in try(resource_values.lambdas, var.cognito_defaults.lambdas, {}) :
+      {
+        "${resource_name}-${lambda_name}" = {
+          vpc_name              = try(lambda_values.vpc_name, var.cognito_defaults.vpc_name, local.default_vpc_name)
+          subnet_name           = try(lambda_values.subnet_name, var.cognito_defaults.subnet_name, local.default_subnet_private_name)
+          security_group        = try(lambda_values.security_group, var.cognito_defaults.security_group, local.default_security_group)
+          attach_network_policy = true
+        }
+      } if try(lambda_values.attach_vpc, var.cognito_defaults.attach_vpc, false) == true
+    ]
+    if try(resource_values.lambdas, var.cognito_defaults.lambdas, null) != null
+  ]
+  cognito_lambdas_vpc = merge(flatten(local.cognito_lambdas_vpc_tmp)...)
+}
+
+data "aws_vpc" "cognito_lambda" {
+  for_each = local.cognito_lambdas_vpc
+
+  filter {
+    name   = "tag:Name"
+    values = [each.value.vpc_name]
+  }
+}
+
+data "aws_subnets" "cognito_lambda" {
+  for_each = local.cognito_lambdas_vpc
+
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.cognito_lambda[each.key].id]
+  }
+
+  tags = {
+    Name = each.value.subnet_name
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = length(self.ids) > 0
+      error_message = "No subnets found in VPC '${each.value.vpc_name}' with Name tag '${each.value.subnet_name}' for lambda '${each.key}'."
+    }
+  }
+}
+
+data "aws_security_group" "cognito_lambda" {
+  for_each = local.cognito_lambdas_vpc
+
+  vpc_id = data.aws_vpc.cognito_lambda[each.key].id
+
+  tags = {
+    Name = each.value.security_group
+  }
 }
 
 module "cognito_lambdas" {
@@ -29,7 +85,7 @@ module "cognito_lambdas" {
   source_path   = try(each.value.source_path, "lambdas/${each.value.name}")
   layers        = try(each.value.layers, null)
   handler       = try(each.value.handler, "index.handler")
-  runtime       = try(each.value.runtime, "nodejs18.x")
+  runtime       = try(each.value.runtime, "nodejs24.x")
   timeout       = try(each.value.timeout, 5)
 
   publish                      = true
@@ -67,9 +123,9 @@ module "cognito_lambdas" {
 
   recreate_missing_package = try(each.value.recreate_missing_package, true)
 
-  attach_network_policy  = try(each.value.attach_network_policy, false)
-  vpc_security_group_ids = try(each.value.vpc_security_group_ids, null)
-  vpc_subnet_ids         = try(each.value.vpc_subnet_ids, null)
+  attach_network_policy  = try(local.cognito_lambdas_vpc[each.key].attach_network_policy, false)
+  vpc_subnet_ids         = try(each.value.vpc_subnet_ids, data.aws_subnets.cognito_lambda[each.key].ids, null)
+  vpc_security_group_ids = try(each.value.vpc_security_group_ids, [data.aws_security_group.cognito_lambda[each.key].id], null)
 
   # Trae problemas de recursividad (Error: Cycle)
   # allowed_triggers = {
