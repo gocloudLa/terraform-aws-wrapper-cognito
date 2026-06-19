@@ -99,6 +99,12 @@ variable "deletion_protection" {
   default     = "INACTIVE"
 }
 
+variable "user_pool_tier" {
+  description = "The user pool feature plan, or tier. Valid values: LITE, ESSENTIALS, PLUS"
+  type        = string
+  default     = null
+}
+
 variable "auto_verified_attributes" {
   description = "The attributes to be auto-verified. Possible values: email, phone_number"
   type        = list(string)
@@ -122,6 +128,12 @@ variable "sms_configuration_sns_caller_arn" {
   description = "The ARN of the Amazon SNS caller. This is usually the IAM role that you've given Cognito permission to assume"
   type        = string
   default     = ""
+}
+
+variable "sms_configuration_sns_region" {
+  description = "The AWS Region to use with Amazon SNS integration"
+  type        = string
+  default     = null
 }
 
 # device_configuration
@@ -270,6 +282,24 @@ variable "mfa_configuration" {
   default     = "OFF"
 }
 
+variable "email_mfa_configuration" {
+  description = "Configuration block for email MFA and email OTP sign-in"
+  type        = map(any)
+  default     = {}
+}
+
+variable "sign_in_policy" {
+  description = "Configuration block for user pool sign-in policy"
+  type        = map(any)
+  default     = {}
+}
+
+variable "web_authn_configuration" {
+  description = "Configuration block for WebAuthn passkey settings"
+  type        = map(any)
+  default     = {}
+}
+
 # software_token_mfa_configuration
 variable "software_token_mfa_configuration" {
   description = "Configuration block for software token MFA (multifactor-auth). mfa_configuration must also be enabled for this to work"
@@ -287,12 +317,13 @@ variable "software_token_mfa_configuration_enabled" {
 variable "password_policy" {
   description = "A container for information about the user pool password policy"
   type = object({
-    minimum_length                   = number,
-    require_lowercase                = bool,
-    require_numbers                  = bool,
-    require_symbols                  = bool,
-    require_uppercase                = bool,
+    minimum_length                   = number
+    require_lowercase                = bool
+    require_numbers                  = bool
+    require_symbols                  = bool
+    require_uppercase                = bool
     temporary_password_validity_days = number
+    password_history_size            = optional(number)
   })
   default = null
 }
@@ -331,6 +362,12 @@ variable "password_policy_temporary_password_validity_days" {
   description = "The minimum length of the password policy that you have set"
   type        = number
   default     = 7
+}
+
+variable "password_policy_password_history_size" {
+  description = "Number of previous passwords users cannot reuse. Requires advanced security features"
+  type        = number
+  default     = null
 }
 
 # schema
@@ -413,6 +450,24 @@ variable "verification_message_template_email_message_by_link" {
 
 variable "verification_message_template_email_subject_by_link" {
   description = "The subject line for the email message template for sending a confirmation link to the user"
+  type        = string
+  default     = null
+}
+
+variable "verification_message_template_email_message" {
+  description = "Email message template for verification. Must contain the {####} placeholder"
+  type        = string
+  default     = null
+}
+
+variable "verification_message_template_email_subject" {
+  description = "Subject line for the email verification message template"
+  type        = string
+  default     = null
+}
+
+variable "verification_message_template_sms_message" {
+  description = "SMS message template for verification. Must contain the {####} placeholder"
   type        = string
   default     = null
 }

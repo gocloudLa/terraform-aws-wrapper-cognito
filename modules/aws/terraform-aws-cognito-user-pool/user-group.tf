@@ -26,5 +26,7 @@ locals {
     }
   ]
 
-  groups = length(var.user_groups) == 0 && (var.user_group_name == null || var.user_group_name == "") ? [] : (length(var.user_groups) > 0 ? local.groups_parsed : local.groups_default)
+  groups = length(var.user_groups) > 0 ? local.groups_parsed : (
+    (var.user_group_name == null || var.user_group_name == "") ? [] : local.groups_default
+  )
 }

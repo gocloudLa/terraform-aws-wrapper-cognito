@@ -11,6 +11,7 @@ resource "aws_cognito_user_pool" "pool" {
   sms_verification_message   = var.sms_verification_message
   username_attributes        = var.username_attributes
   deletion_protection        = var.deletion_protection
+  user_pool_tier             = var.user_pool_tier
 
   # username_configuration
   dynamic "username_configuration" {
@@ -58,9 +59,17 @@ resource "aws_cognito_user_pool" "pool" {
     }
   }
 
+  dynamic "email_mfa_configuration" {
+    for_each = local.email_mfa_configuration
+    content {
+      message = email_mfa_configuration.value.message
+      subject = email_mfa_configuration.value.subject
+    }
+  }
+
   # lambda_config
   dynamic "lambda_config" {
-    for_each = var.lambda_config != null && length(var.lambda_config) > 0 ? [1] : []
+    for_each = var.lambda_config != null ? (try(length(var.lambda_config), 0) > 0 ? [1] : []) : []
     content {
       create_auth_challenge          = try(var.lambda_config.create_auth_challenge, var.lambda_config_create_auth_challenge)
       custom_message                 = try(var.lambda_config.custom_message, var.lambda_config_custom_message)
@@ -87,6 +96,13 @@ resource "aws_cognito_user_pool" "pool" {
           lambda_version = try(var.lambda_config.custom_sms_sender.lambda_version, null)
         }
       }
+      dynamic "pre_token_generation_config" {
+        for_each = try(var.lambda_config.pre_token_generation_config, null) != null ? [var.lambda_config.pre_token_generation_config] : []
+        content {
+          lambda_arn     = pre_token_generation_config.value.lambda_arn
+          lambda_version = pre_token_generation_config.value.lambda_version
+        }
+      }
     }
   }
 
@@ -96,6 +112,7 @@ resource "aws_cognito_user_pool" "pool" {
     content {
       external_id    = sms_configuration.value.external_id
       sns_caller_arn = sms_configuration.value.sns_caller_arn
+      sns_region     = sms_configuration.value.sns_region
     }
   }
 
@@ -117,6 +134,7 @@ resource "aws_cognito_user_pool" "pool" {
       require_symbols                  = password_policy.value.require_symbols
       require_uppercase                = password_policy.value.require_uppercase
       temporary_password_validity_days = password_policy.value.temporary_password_validity_days
+      password_history_size            = password_policy.value.password_history_size
     }
   }
 
@@ -179,6 +197,13 @@ resource "aws_cognito_user_pool" "pool" {
     for_each = local.user_pool_add_ons
     content {
       advanced_security_mode = user_pool_add_ons.value.advanced_security_mode
+
+      dynamic "advanced_security_additional_flows" {
+        for_each = try(user_pool_add_ons.value.advanced_security_additional_flows, null) != null ? [user_pool_add_ons.value.advanced_security_additional_flows] : []
+        content {
+          custom_auth_mode = advanced_security_additional_flows.value.custom_auth_mode
+        }
+      }
     }
   }
 
@@ -187,8 +212,26 @@ resource "aws_cognito_user_pool" "pool" {
     for_each = local.verification_message_template
     content {
       default_email_option  = verification_message_template.value.default_email_option
+      email_message         = verification_message_template.value.email_message
       email_message_by_link = verification_message_template.value.email_message_by_link
+      email_subject         = verification_message_template.value.email_subject
       email_subject_by_link = verification_message_template.value.email_subject_by_link
+      sms_message           = verification_message_template.value.sms_message
+    }
+  }
+
+  dynamic "sign_in_policy" {
+    for_each = local.sign_in_policy
+    content {
+      allowed_first_auth_factors = sign_in_policy.value.allowed_first_auth_factors
+    }
+  }
+
+  dynamic "web_authn_configuration" {
+    for_each = local.web_authn_configuration
+    content {
+      relying_party_id  = web_authn_configuration.value.relying_party_id
+      user_verification = web_authn_configuration.value.user_verification
     }
   }
 
@@ -238,9 +281,28 @@ locals {
   sms_configuration_default = {
     external_id    = try(var.sms_configuration.external_id, var.sms_configuration_external_id)
     sns_caller_arn = try(var.sms_configuration.sns_caller_arn, var.sms_configuration_sns_caller_arn)
+    sns_region     = try(var.sms_configuration.sns_region, var.sms_configuration_sns_region, null)
   }
 
   sms_configuration = local.sms_configuration_default.external_id == "" || local.sms_configuration_default.sns_caller_arn == "" ? [] : [local.sms_configuration_default]
+
+  email_mfa_configuration_default = {
+    message = try(var.email_mfa_configuration.message, null)
+    subject = try(var.email_mfa_configuration.subject, null)
+  }
+
+  email_mfa_configuration = local.email_mfa_configuration_default.message == null && local.email_mfa_configuration_default.subject == null ? [] : [local.email_mfa_configuration_default]
+
+  sign_in_policy = length(try(var.sign_in_policy.allowed_first_auth_factors, [])) == 0 ? [] : [{
+    allowed_first_auth_factors = var.sign_in_policy.allowed_first_auth_factors
+  }]
+
+  web_authn_configuration_default = {
+    relying_party_id  = try(var.web_authn_configuration.relying_party_id, null)
+    user_verification = try(var.web_authn_configuration.user_verification, null)
+  }
+
+  web_authn_configuration = local.web_authn_configuration_default.relying_party_id == null && local.web_authn_configuration_default.user_verification == null ? [] : [local.web_authn_configuration_default]
 
   # device_configuration
   device_configuration_default = {
@@ -269,6 +331,7 @@ locals {
     require_symbols                  = var.password_policy_require_symbols
     require_uppercase                = var.password_policy_require_uppercase
     temporary_password_validity_days = var.password_policy_temporary_password_validity_days
+    password_history_size            = var.password_policy_password_history_size
   }
 
   password_policy_not_null = var.password_policy == null ? local.password_policy_is_null : {
@@ -278,13 +341,15 @@ locals {
     require_symbols                  = try(var.password_policy.require_symbols, var.password_policy_require_symbols)
     require_uppercase                = try(var.password_policy.require_uppercase, var.password_policy_require_uppercase)
     temporary_password_validity_days = try(var.password_policy.temporary_password_validity_days, var.password_policy_temporary_password_validity_days)
+    password_history_size            = try(var.password_policy.password_history_size, var.password_policy_password_history_size, null)
   }
 
   password_policy = var.password_policy == null ? [local.password_policy_is_null] : [local.password_policy_not_null]
 
   # user_pool_add_ons
   user_pool_add_ons_default = {
-    advanced_security_mode = try(var.user_pool_add_ons.advanced_security_mode, var.user_pool_add_ons_advanced_security_mode)
+    advanced_security_mode             = try(var.user_pool_add_ons.advanced_security_mode, var.user_pool_add_ons_advanced_security_mode)
+    advanced_security_additional_flows = try(var.user_pool_add_ons.advanced_security_additional_flows, null)
   }
 
   user_pool_add_ons = var.user_pool_add_ons_advanced_security_mode == null && length(var.user_pool_add_ons) == 0 ? [] : [local.user_pool_add_ons_default]
@@ -292,8 +357,11 @@ locals {
   # verification_message_template
   verification_message_template_default = {
     default_email_option  = try(var.verification_message_template.default_email_option, var.verification_message_template_default_email_option)
+    email_message         = try(var.verification_message_template.email_message, var.verification_message_template_email_message, null)
     email_message_by_link = try(var.verification_message_template.email_message_by_link, var.verification_message_template_email_message_by_link)
+    email_subject         = try(var.verification_message_template.email_subject, var.verification_message_template_email_subject, null)
     email_subject_by_link = try(var.verification_message_template.email_subject_by_link, var.verification_message_template_email_subject_by_link)
+    sms_message           = try(var.verification_message_template.sms_message, var.verification_message_template_sms_message, null)
   }
 
   verification_message_template = [local.verification_message_template_default]

@@ -36,5 +36,7 @@ locals {
     }
   ]
 
-  resource_servers = length(var.resource_servers) == 0 && (var.resource_server_name == null || var.resource_server_name == "") ? [] : (length(var.resource_servers) > 0 ? local.resource_servers_parsed : local.resource_server_default)
+  resource_servers = length(var.resource_servers) > 0 ? local.resource_servers_parsed : (
+    (var.resource_server_name == null || var.resource_server_name == "") ? [] : local.resource_server_default
+  )
 }

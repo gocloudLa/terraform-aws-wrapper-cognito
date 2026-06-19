@@ -20,6 +20,14 @@ resource "aws_cognito_user_pool_client" "client" {
   enable_token_revocation              = try(element(local.clients, count.index).enable_token_revocation, null)
   user_pool_id                         = aws_cognito_user_pool.pool[0].id
 
+  dynamic "refresh_token_rotation" {
+    for_each = try(element(local.clients, count.index).refresh_token_rotation, null) != null ? [element(local.clients, count.index).refresh_token_rotation] : []
+    content {
+      feature                    = refresh_token_rotation.value.feature
+      retry_grace_period_seconds = try(refresh_token_rotation.value.retry_grace_period_seconds, null)
+    }
+  }
+
   # token_validity_units
   dynamic "token_validity_units" {
     for_each = length(try(element(local.clients, count.index).token_validity_units, {})) == 0 ? [] : [element(local.clients, count.index).token_validity_units]
@@ -58,6 +66,7 @@ locals {
       prevent_user_existence_errors        = var.client_prevent_user_existence_errors
       write_attributes                     = var.client_write_attributes
       enable_token_revocation              = var.client_enable_token_revocation
+      refresh_token_rotation               = null
     }
   ]
 
@@ -82,8 +91,11 @@ locals {
     prevent_user_existence_errors        = try(e.prevent_user_existence_errors, null)
     write_attributes                     = try(e.write_attributes, null)
     enable_token_revocation              = try(e.enable_token_revocation, null)
+    refresh_token_rotation               = try(e.refresh_token_rotation, null)
     }
   ]
 
-  clients = length(var.clients) == 0 && (var.client_name == null || var.client_name == "") ? [] : (length(var.clients) > 0 ? local.clients_parsed : local.clients_default)
+  clients = length(var.clients) > 0 ? local.clients_parsed : (
+    (var.client_name == null || var.client_name == "") ? [] : local.clients_default
+  )
 }
