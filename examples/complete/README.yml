@@ -1,8 +1,8 @@
 title: "Complete Example"
 description: "Demonstrates Cognito user pools with OAuth clients, Lambda triggers, modern provider features, and platform defaults."
-main_purpose: "Configure multiple user pools covering baseline, employee, and members scenarios including tier, security add-ons, and token rotation."
+main_purpose: "Configure multiple user pools covering baseline, advanced PLUS, and ESSENTIALS with VPC Lambda scenarios."
 key_features:
   - "**simple**: Minimal email-as-username pool with custom schema and SRP client."
-  - "**client-employee**: PLUS tier, threat protection add-ons, password history, refresh token rotation, hosted UI domain, post-confirmation Lambda."
-  - "**client-members**: ESSENTIALS tier (security OFF), sign-in policy, VPC migrate-user Lambda, refresh token rotation."
+  - "**plus-advanced**: PLUS tier, threat protection add-ons, password history, refresh token rotation, hosted UI domain, post-confirmation Lambda."
+  - "**essentials-vpc**: ESSENTIALS tier (security OFF), sign-in policy, VPC migrate-user Lambda, refresh token rotation."
   - "**Commented patterns**: SAML IdP, email MFA, WebAuthn/passkeys."

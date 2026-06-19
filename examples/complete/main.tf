@@ -42,8 +42,8 @@ module "wrapper_cognito" {
       ]
     }
 
-    # Employee pool — PLUS tier, threat protection, hosted UI, post-confirmation Lambda, OAuth client.
-    "client-employee" = {
+    # PLUS tier — threat protection, OAuth hosted UI, post-confirmation Lambda, refresh token rotation.
+    "plus-advanced" = {
       deletion_protection = "INACTIVE"
       user_pool_tier      = "PLUS" # Default: null — Threat Protection requires PLUS (not ESSENTIALS/LITE)
 
@@ -130,7 +130,7 @@ module "wrapper_cognito" {
 
       clients = [
         {
-          name                    = "client-employee"
+          name                    = "oauth"
           enable_token_revocation = "true"
           allowed_oauth_scopes    = ["email", "openid", "profile"]
           explicit_auth_flows = [
@@ -151,7 +151,7 @@ module "wrapper_cognito" {
         }
       ]
 
-      domain = "client-employee"
+      domain = "plus-advanced"
 
       lambda_config = {
         post_confirmation = "post-confirmation"
@@ -165,7 +165,7 @@ module "wrapper_cognito" {
           timeout     = 10  # Default: 5
           memory_size = 256 # Default: 128
           environment_variables = {
-            TENANT = "employee"
+            TENANT = "plus-advanced"
           }
           cognito_policy_statements = {
             AdminUpdateUserAttributes = {
@@ -177,8 +177,8 @@ module "wrapper_cognito" {
       }
     }
 
-    # Members pool — ESSENTIALS tier, VPC Lambda, sign-in policy, refresh token rotation.
-    "client-members" = {
+    # ESSENTIALS tier — sign-in policy, VPC Lambda, refresh token rotation.
+    "essentials-vpc" = {
       deletion_protection = "INACTIVE"
       user_pool_tier      = "ESSENTIALS" # Default: null
 
@@ -242,7 +242,7 @@ module "wrapper_cognito" {
 
       clients = [
         {
-          name                    = "client-members"
+          name                    = "oauth"
           enable_token_revocation = "true"
           allowed_oauth_scopes    = ["email", "openid", "profile"]
           explicit_auth_flows = [
@@ -264,7 +264,7 @@ module "wrapper_cognito" {
         post_confirmation = "migrate-user"
       }
 
-      domain = "client-members"
+      domain = "essentials-vpc"
 
       lambdas = {
         "migrate-user" = {

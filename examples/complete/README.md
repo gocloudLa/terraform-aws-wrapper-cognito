@@ -1,18 +1,19 @@
 # Complete Example 🚀
 
-Demonstrates Cognito user pools with SAML federation, OAuth clients, custom attributes, and Lambda triggers.
+Demonstrates Cognito user pools with OAuth clients, Lambda triggers, modern provider features, and platform defaults.
 
 ## 🔧 What's Included
 
 ### Analysis of Terraform Configuration
 
 #### Main Purpose
-Configure multiple user pools with identity providers, app clients, hosted UI domains, and optional Lambda triggers.
+Configure multiple user pools covering baseline, advanced PLUS, and ESSENTIALS with VPC Lambda scenarios.
 
 #### Key Features Demonstrated
-- **User Pools**: Employee pool with SAML Active Directory and custom string schemas.
-- **App Clients**: OAuth authorization-code flow with callback URLs per pool.
-- **Lambda Triggers**: VPC-attached migrate-user trigger for the members pool.
+- **simple**: Minimal email-as-username pool with custom schema and SRP client.
+- **plus-advanced**: PLUS tier, threat protection add-ons, password history, refresh token rotation, hosted UI domain, post-confirmation Lambda.
+- **essentials-vpc**: ESSENTIALS tier (security OFF), sign-in policy, VPC migrate-user Lambda, refresh token rotation.
+- **Commented patterns**: SAML IdP, email MFA, WebAuthn/passkeys.
 
 ## 🚀 Quick Start
 
