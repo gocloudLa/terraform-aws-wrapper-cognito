@@ -267,13 +267,13 @@ features:
           ```
 important_notes: |
   - **⚠️ Lambda ordering:** User pool Lambda triggers and IAM policies that reference the pool ARN are created in separate apply steps to break the Cognito–Lambda dependency cycle. Expect a two-phase apply when adding or changing triggers.
+  - **ℹ️ User pool tier:** `ESSENTIALS` and `LITE` cannot use Threat Protection (`user_pool_add_ons.advanced_security_mode` ENFORCED/AUDIT). Use `PLUS` for advanced security, password history, and threat protection features. Omit `user_pool_tier` to keep the AWS default on new pools.
+  - **ℹ️ Provider version:** Requires AWS provider `>= 5.98.0` for `user_pool_tier` and client `refresh_token_rotation`.
+  - **ℹ️ Refresh token rotation:** When `clients[].refresh_token_rotation.feature` is `ENABLED`, do not set `ALLOW_REFRESH_TOKEN_AUTH` in `explicit_auth_flows` (AWS rejects it). Use the OAuth `/oauth2/token` endpoint or `GetTokensFromRefreshToken` to refresh tokens instead.
   - **ℹ️ Lambda names:** Values in `lambda_config` must match keys under `lambdas` for the same pool entry (e.g. `post_confirmation = "migrate-user"` references `lambdas.migrate-user`).
   - **ℹ️ Lambda VPC:** Set `attach_vpc = true` under `lambdas` to resolve VPC, subnets, and security group from platform defaults. Override with `vpc_name`, `subnet_name`, `security_group`, or explicit `vpc_subnet_ids` / `vpc_security_group_ids`.
   - **ℹ️ Custom domain:** `domain_certificate_arn` must reference an ISSUED ACM certificate in `us-east-1`, even when the user pool is in another region.
   - **ℹ️ UI customization:** Hosted UI branding is applied after the user pool domain exists; set `domain` (or `domain` + `domain_certificate_arn`) before expecting CSS or logo changes.
-  - **ℹ️ Provider version:** Requires AWS provider `>= 5.98.0` for `user_pool_tier`, `pre_token_generation_config`, and client `refresh_token_rotation`.
-  - **ℹ️ Pre-token trigger:** Use `lambda_config.pre_token_generation` (legacy ARN) or `lambda_config.pre_token_generation_config` with `lambda` (key under `lambdas`), `lambda_arn`, and `lambda_version` (`V1_0`, `V2_0`, `V3_0`).
-  - **ℹ️ User pool tier:** Omit `user_pool_tier` to keep current AWS default (`ESSENTIALS` on new pools). Set explicitly to control pricing and feature eligibility.
   - **ℹ️ Username attributes:** `username_attributes` and `alias_attributes` are mutually exclusive in Cognito; set only one per pool.
   - **🔒 Client secrets:** App client secrets are sensitive outputs from the child module; consume them via Terraform state or a secrets manager, not plain outputs in CI logs.
 input_table: |
@@ -299,7 +299,7 @@ input_table: |
   | web_authn_configuration | WebAuthn passkey settings (`relying_party_id`, `user_verification`). | `map` | `{}` | no |
   | user_attribute_update_settings | Attributes requiring verification before update. | `map` | `null` | no |
   | recovery_mechanisms | Account recovery mechanism list (`name`, `priority`). | `list` | `[]` | no |
-  | lambda_config | Trigger map: keys reference `lambdas`; optional `pre_token_generation_config` with `lambda`, `lambda_arn`, `lambda_version`. | `map` | `null` | no |
+  | lambda_config | Map of trigger names to `lambdas` keys; V2 senders as `{ lambda_arn, lambda_version }` objects. | `map` | `null` | no |
   | password_policy | Password rules; optional `password_history_size` (requires advanced security). | `map` | `null` | no |
   | user_pool_add_ons | Advanced security add-ons; optional `advanced_security_additional_flows.custom_auth_mode`. | `map` | `{ advanced_security_mode = "ENFORCED" }` | no |
   | verification_message_template | Verification templates (`default_email_option`, `email_message`, `email_subject`, `sms_message`, link variants). | `map` | `{ default_email_option = "CONFIRM_WITH_CODE" }` | no |

@@ -34,32 +34,19 @@ module "cognito" {
   recovery_mechanisms            = try(each.value.recovery_mechanisms, var.cognito_defaults.recovery_mechanisms, [])
 
   lambda_config = try(each.value.lambda_config, var.cognito_defaults.lambda_config, null) != null ? {
-    create_auth_challenge = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.create_auth_challenge, var.cognito_defaults.lambda_config.create_auth_challenge, "")}"].lambda_function_arn, null)
-    custom_message        = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.custom_message, var.cognito_defaults.lambda_config.custom_message, "")}"].lambda_function_arn, null)
-    define_auth_challenge = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.define_auth_challenge, var.cognito_defaults.lambda_config.define_auth_challenge, "")}"].lambda_function_arn, null)
-    post_authentication   = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.post_authentication, var.cognito_defaults.lambda_config.post_authentication, "")}"].lambda_function_arn, null)
-    post_confirmation     = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.post_confirmation, var.cognito_defaults.lambda_config.post_confirmation, "")}"].lambda_function_arn, null)
-    pre_authentication    = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.pre_authentication, var.cognito_defaults.lambda_config.pre_authentication, "")}"].lambda_function_arn, null)
-    pre_sign_up           = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.pre_sign_up, var.cognito_defaults.lambda_config.pre_sign_up, "")}"].lambda_function_arn, null)
-    pre_token_generation = try(
-      module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.pre_token_generation, var.cognito_defaults.lambda_config.pre_token_generation, "")}"].lambda_function_arn,
-      try(each.value.lambda_config.pre_token_generation_config.lambda_arn, var.cognito_defaults.lambda_config.pre_token_generation_config.lambda_arn, null),
-      try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.pre_token_generation_config.lambda, var.cognito_defaults.lambda_config.pre_token_generation_config.lambda, "")}"].lambda_function_arn, null),
-      null
-    )
+    create_auth_challenge          = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.create_auth_challenge, var.cognito_defaults.lambda_config.create_auth_challenge, "")}"].lambda_function_arn, null)
+    custom_message                 = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.custom_message, var.cognito_defaults.lambda_config.custom_message, "")}"].lambda_function_arn, null)
+    define_auth_challenge          = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.define_auth_challenge, var.cognito_defaults.lambda_config.define_auth_challenge, "")}"].lambda_function_arn, null)
+    post_authentication            = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.post_authentication, var.cognito_defaults.lambda_config.post_authentication, "")}"].lambda_function_arn, null)
+    post_confirmation              = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.post_confirmation, var.cognito_defaults.lambda_config.post_confirmation, "")}"].lambda_function_arn, null)
+    pre_authentication             = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.pre_authentication, var.cognito_defaults.lambda_config.pre_authentication, "")}"].lambda_function_arn, null)
+    pre_sign_up                    = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.pre_sign_up, var.cognito_defaults.lambda_config.pre_sign_up, "")}"].lambda_function_arn, null)
+    pre_token_generation           = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.pre_token_generation, var.cognito_defaults.lambda_config.pre_token_generation, "")}"].lambda_function_arn, null)
     user_migration                 = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.user_migration, var.cognito_defaults.lambda_config.user_migration, "")}"].lambda_function_arn, null)
     verify_auth_challenge_response = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.verify_auth_challenge_response, var.cognito_defaults.lambda_config.verify_auth_challenge_response, "")}"].lambda_function_arn, null)
     kms_key_id                     = try(each.value.lambda_config.kms_key_id, var.cognito_defaults.lambda_config.kms_key_id, null)
     custom_email_sender            = try(each.value.lambda_config.custom_email_sender, var.cognito_defaults.lambda_config.custom_email_sender, {})
     custom_sms_sender              = try(each.value.lambda_config.custom_sms_sender, var.cognito_defaults.lambda_config.custom_sms_sender, {})
-    pre_token_generation_config = try(each.value.lambda_config.pre_token_generation_config, var.cognito_defaults.lambda_config.pre_token_generation_config, null) != null ? {
-      lambda_arn = try(
-        each.value.lambda_config.pre_token_generation_config.lambda_arn,
-        module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.pre_token_generation_config.lambda, var.cognito_defaults.lambda_config.pre_token_generation_config.lambda, try(each.value.lambda_config.pre_token_generation, var.cognito_defaults.lambda_config.pre_token_generation, ""))}"].lambda_function_arn,
-        null
-      )
-      lambda_version = try(each.value.lambda_config.pre_token_generation_config.lambda_version, var.cognito_defaults.lambda_config.pre_token_generation_config.lambda_version, "V1_0")
-    } : null
   } : null
 
   password_policy = try(each.value.password_policy, var.cognito_defaults.password_policy, null)

@@ -42,10 +42,10 @@ module "wrapper_cognito" {
       ]
     }
 
-    # Employee pool — hosted UI, post-confirmation Lambda, OAuth client, advanced security add-ons.
+    # Employee pool — PLUS tier, threat protection, hosted UI, post-confirmation Lambda, OAuth client.
     "client-employee" = {
       deletion_protection = "INACTIVE"
-      user_pool_tier      = "ESSENTIALS" # Default: null
+      user_pool_tier      = "PLUS" # Default: null — Threat Protection requires PLUS (not ESSENTIALS/LITE)
 
       admin_create_user_config = {
         allow_admin_create_user_only = "true"
@@ -53,7 +53,7 @@ module "wrapper_cognito" {
       alias_attributes = ["email", "preferred_username"]
 
       user_pool_add_ons = {
-        advanced_security_mode = "ENFORCED" # Default: ENFORCED
+        advanced_security_mode = "ENFORCED" # Default: ENFORCED — requires PLUS tier
         advanced_security_additional_flows = {
           custom_auth_mode = "AUDIT" # Default: AUDIT when block is set
         }
@@ -134,7 +134,6 @@ module "wrapper_cognito" {
           enable_token_revocation = "true"
           allowed_oauth_scopes    = ["email", "openid", "profile"]
           explicit_auth_flows = [
-            "ALLOW_REFRESH_TOKEN_AUTH",
             "ALLOW_USER_SRP_AUTH",
             "ALLOW_USER_PASSWORD_AUTH"
           ]
@@ -178,10 +177,14 @@ module "wrapper_cognito" {
       }
     }
 
-    # Members pool — VPC Lambda, pre-token generation (V2), sign-in policy, refresh token rotation.
+    # Members pool — ESSENTIALS tier, VPC Lambda, sign-in policy, refresh token rotation.
     "client-members" = {
       deletion_protection = "INACTIVE"
       user_pool_tier      = "ESSENTIALS" # Default: null
+
+      user_pool_add_ons = {
+        advanced_security_mode = "OFF" # Default: ENFORCED — must be OFF on ESSENTIALS/LITE tiers
+      }
 
       admin_create_user_config = {
         allow_admin_create_user_only = "true"
@@ -243,7 +246,6 @@ module "wrapper_cognito" {
           enable_token_revocation = "true"
           allowed_oauth_scopes    = ["email", "openid", "profile"]
           explicit_auth_flows = [
-            "ALLOW_REFRESH_TOKEN_AUTH",
             "ALLOW_USER_SRP_AUTH",
             "ALLOW_USER_PASSWORD_AUTH"
           ]
@@ -260,10 +262,6 @@ module "wrapper_cognito" {
 
       lambda_config = {
         post_confirmation = "migrate-user"
-        pre_token_generation_config = {
-          lambda         = "pre-token"
-          lambda_version = "V2_0" # V1_0 legacy ID token; V2_0/V3_0 customize access tokens
-        }
       }
 
       domain = "client-members"
@@ -295,13 +293,6 @@ module "wrapper_cognito" {
           tags = {
             trigger = "post_confirmation"
           }
-        }
-        "pre-token" = {
-          source_path = "lambdas/pre-token"
-          runtime     = "nodejs18.x"
-          handler     = "function.handler"
-          timeout     = 10  # Default: 5
-          memory_size = 128 # Default: 128
         }
       }
     }

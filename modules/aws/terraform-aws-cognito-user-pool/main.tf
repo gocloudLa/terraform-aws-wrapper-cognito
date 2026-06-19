@@ -96,13 +96,6 @@ resource "aws_cognito_user_pool" "pool" {
           lambda_version = try(var.lambda_config.custom_sms_sender.lambda_version, null)
         }
       }
-      dynamic "pre_token_generation_config" {
-        for_each = try(var.lambda_config.pre_token_generation_config, null) != null ? [var.lambda_config.pre_token_generation_config] : []
-        content {
-          lambda_arn     = pre_token_generation_config.value.lambda_arn
-          lambda_version = pre_token_generation_config.value.lambda_version
-        }
-      }
     }
   }
 
