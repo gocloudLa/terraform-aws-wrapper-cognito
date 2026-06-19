@@ -2,13 +2,18 @@ module "cognito" {
   for_each = var.cognito_parameters
   source   = "./modules/aws/terraform-aws-cognito-user-pool"
 
-  enabled        = true
+  enabled        = try(each.value.enabled, var.cognito_defaults.enabled, true)
   user_pool_name = "${local.common_name}-${each.key}"
 
   alias_attributes           = try(each.value.alias_attributes, var.cognito_defaults.alias_attributes, ["email", "phone_number"])
+  username_attributes        = try(each.value.username_attributes, var.cognito_defaults.username_attributes, null)
+  username_configuration     = try(each.value.username_configuration, var.cognito_defaults.username_configuration, {})
   auto_verified_attributes   = try(each.value.auto_verified_attributes, var.cognito_defaults.auto_verified_attributes, ["email"])
   sms_authentication_message = try(each.value.sms_authentication_message, var.cognito_defaults.sms_authentication_message, "Your username is {username} and temporary password is {####}.")
   sms_verification_message   = try(each.value.sms_verification_message, var.cognito_defaults.sms_verification_message, "This is the verification message {####}.")
+
+  email_verification_message = try(each.value.email_verification_message, var.cognito_defaults.email_verification_message, null)
+  email_verification_subject = try(each.value.email_verification_subject, var.cognito_defaults.email_verification_subject, null)
 
   deletion_protection = try(each.value.deletion_protection, var.cognito_defaults.deletion_protection, "ACTIVE")
 
@@ -18,6 +23,10 @@ module "cognito" {
   admin_create_user_config = try(each.value.admin_create_user_config, var.cognito_defaults.admin_create_user_config, {})
   device_configuration     = try(each.value.device_configuration, var.cognito_defaults.device_configuration, {})
   email_configuration      = try(each.value.email_configuration, var.cognito_defaults.email_configuration, {})
+  sms_configuration        = try(each.value.sms_configuration, var.cognito_defaults.sms_configuration, {})
+
+  user_attribute_update_settings = try(each.value.user_attribute_update_settings, var.cognito_defaults.user_attribute_update_settings, null)
+  recovery_mechanisms            = try(each.value.recovery_mechanisms, var.cognito_defaults.recovery_mechanisms, [])
 
   lambda_config = {
     create_auth_challenge          = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.create_auth_challenge, var.cognito_defaults.lambda_config.create_auth_challenge, "")}"].lambda_function_arn, null)
@@ -31,6 +40,8 @@ module "cognito" {
     user_migration                 = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.user_migration, var.cognito_defaults.lambda_config.user_migration, "")}"].lambda_function_arn, null)
     verify_auth_challenge_response = try(module.cognito_lambdas["${each.key}-${try(each.value.lambda_config.verify_auth_challenge_response, var.cognito_defaults.lambda_config.verify_auth_challenge_response, "")}"].lambda_function_arn, null)
     kms_key_id                     = try(each.value.lambda_config.kms_key_id, var.cognito_defaults.lambda_config.kms_key_id, null)
+    custom_email_sender            = try(each.value.lambda_config.custom_email_sender, var.cognito_defaults.lambda_config.custom_email_sender, {})
+    custom_sms_sender              = try(each.value.lambda_config.custom_sms_sender, var.cognito_defaults.lambda_config.custom_sms_sender, {})
   }
 
   password_policy = try(each.value.password_policy, var.cognito_defaults.password_policy, null)

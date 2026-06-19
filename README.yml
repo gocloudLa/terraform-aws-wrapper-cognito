@@ -274,19 +274,28 @@ important_notes: |
   - **ℹ️ Lambda names:** Values in `lambda_config` must match keys under `lambdas` for the same pool entry (e.g. `post_confirmation = "migrate-user"` references `lambdas.migrate-user`).
   - **ℹ️ Custom domain:** `domain_certificate_arn` must reference an ISSUED ACM certificate in `us-east-1`, even when the user pool is in another region.
   - **ℹ️ UI customization:** Hosted UI branding is applied after the user pool domain exists; set `domain` (or `domain` + `domain_certificate_arn`) before expecting CSS or logo changes.
+  - **ℹ️ Username attributes:** `username_attributes` and `alias_attributes` are mutually exclusive in Cognito; set only one per pool.
   - **🔒 Client secrets:** App client secrets are sensitive outputs from the child module; consume them via Terraform state or a secrets manager, not plain outputs in CI logs.
 input_table: |
+  | enabled | Whether to create resources for this user pool entry. | `bool` | `true` | no |
   | alias_attributes | Attributes supported as aliases (e.g. email, phone_number). | `list` | `["email", "phone_number"]` | no |
+  | username_attributes | Attributes that may be used as usernames (conflicts with `alias_attributes`). | `list` | `null` | no |
+  | username_configuration | Username case sensitivity settings. | `map` | `{}` | no |
   | auto_verified_attributes | Attributes automatically verified on sign-up. | `list` | `["email"]` | no |
+  | email_verification_message | Email verification message template for the user pool. | `string` | `null` | no |
+  | email_verification_subject | Email verification subject for the user pool. | `string` | `null` | no |
   | sms_authentication_message | SMS message template for authentication. | `string` | `"Your username is {username} and temporary password is {####}."` | no |
   | sms_verification_message | SMS message template for verification. | `string` | `"This is the verification message {####}."` | no |
+  | sms_configuration | SNS configuration for SMS MFA and messaging (`external_id`, `sns_caller_arn`). | `map` | `{}` | no |
   | deletion_protection | Deletion protection status (`ACTIVE` or `INACTIVE`). | `string` | `"ACTIVE"` | no |
   | mfa_configuration | MFA enforcement level (`OFF`, `ON`, or `OPTIONAL`). | `string` | `"OPTIONAL"` | no |
   | software_token_mfa_configuration | Software token MFA settings. | `map` | `{ enabled = true }` | no |
   | admin_create_user_config | Admin-driven user creation settings. | `map` | `{}` | no |
   | device_configuration | Device tracking and challenge settings. | `map` | `{}` | no |
   | email_configuration | SES email sending configuration. | `map` | `{}` | no |
-  | lambda_config | Map of trigger names to Lambda keys defined under `lambdas`. | `map` | `null` | no |
+  | user_attribute_update_settings | Attributes requiring verification before update. | `map` | `null` | no |
+  | recovery_mechanisms | Account recovery mechanism list (`name`, `priority`). | `list` | `[]` | no |
+  | lambda_config | Map of trigger names to `lambdas` keys; V2 senders as `{ lambda_arn, lambda_version }` objects. | `map` | `null` | no |
   | password_policy | Password complexity and validity rules. | `map` | `null` | no |
   | user_pool_add_ons | Advanced security add-ons. | `map` | `{ advanced_security_mode = "ENFORCED" }` | no |
   | verification_message_template | Email/SMS verification message template. | `map` | `{ default_email_option = "CONFIRM_WITH_CODE" }` | no |

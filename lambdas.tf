@@ -20,7 +20,7 @@ locals {
 module "cognito_lambdas" {
   for_each = local.cognito_lambdas
   source   = "terraform-aws-modules/lambda/aws"
-  version  = "7.2.1"
+  version  = "8.7.0"
 
   lambda_at_edge = false
 
@@ -32,9 +32,12 @@ module "cognito_lambdas" {
   runtime       = try(each.value.runtime, "nodejs18.x")
   timeout       = try(each.value.timeout, 5)
 
-  publish                 = true
-  ignore_source_code_hash = true
-  create_package          = true
+  publish                      = true
+  ignore_source_code_hash      = true
+  trigger_on_package_timestamp = false
+  create_package               = true
+
+  cloudwatch_logs_retention_in_days = try(each.value.cloudwatch_logs_retention_in_days, 14)
 
   memory_size                       = try(each.value.memory_size, 128)
   ephemeral_storage_size            = try(each.value.ephemeral_storage_size, 512)
@@ -76,7 +79,7 @@ module "cognito_lambdas" {
   #   }
   # }
 
-  tags = merge(local.common_tags, try(each.value.tags, null), { workload = "${each.key}" })
+  tags = merge(local.common_tags, try(each.value.tags, var.cognito_defaults.tags, null), { workload = "${each.key}" })
 }
 
 # Proceso Permissions por fuera del modulo por la interdependencia entre Cognito y Lambda

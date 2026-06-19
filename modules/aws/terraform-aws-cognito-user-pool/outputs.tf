@@ -41,6 +41,16 @@ output "domain_cloudfront_distribution_arn" {
   value       = var.enabled ? join("", aws_cognito_user_pool_domain.domain.*.cloudfront_distribution_arn) : null
 }
 
+output "domain_cloudfront_distribution" {
+  description = "The name of the CloudFront distribution"
+  value       = var.enabled ? join("", aws_cognito_user_pool_domain.domain.*.cloudfront_distribution) : null
+}
+
+output "domain_cloudfront_distribution_zone_id" {
+  description = "The Route53 hosted zone ID of the CloudFront distribution"
+  value       = var.enabled ? join("", aws_cognito_user_pool_domain.domain.*.cloudfront_distribution_zone_id) : null
+}
+
 output "domain_s3_bucket" {
   description = "The S3 bucket where the static files for this domain are stored"
   value       = var.enabled ? join("", aws_cognito_user_pool_domain.domain.*.s3_bucket) : null
