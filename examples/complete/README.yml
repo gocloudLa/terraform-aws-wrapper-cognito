@@ -1,7 +1,8 @@
 title: "Complete Example"
-description: "Demonstrates Cognito user pools with SAML federation, OAuth clients, custom attributes, and Lambda triggers."
-main_purpose: "Configure multiple user pools with identity providers, app clients, hosted UI domains, and optional Lambda triggers."
+description: "Demonstrates Cognito user pools with OAuth clients, Lambda triggers, modern provider features, and platform defaults."
+main_purpose: "Configure multiple user pools covering baseline, employee, and members scenarios including tier, security add-ons, token rotation, and pre-token generation."
 key_features:
-  - "**User Pools**: Employee pool with SAML Active Directory and custom string schemas."
-  - "**App Clients**: OAuth authorization-code flow with callback URLs per pool."
-  - "**Lambda Triggers**: VPC-attached migrate-user trigger for the members pool."
+  - "**simple**: Minimal email-as-username pool with custom schema and SRP client."
+  - "**client-employee**: ESSENTIALS tier, advanced security add-ons, password history, refresh token rotation, hosted UI domain, post-confirmation Lambda."
+  - "**client-members**: Sign-in policy, pre_token_generation_config (V2_0), VPC migrate-user Lambda, refresh token rotation."
+  - "**Commented patterns**: SAML IdP, email MFA, WebAuthn/passkeys, and SMS sns_region overrides for production stacks."
