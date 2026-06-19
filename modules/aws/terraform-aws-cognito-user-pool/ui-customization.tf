@@ -2,11 +2,10 @@ locals {
   client_ids_map = { for c in aws_cognito_user_pool_client.client : c.name => c.id }
 
   client_ui_customizations = { for c in var.clients : c.name => {
-    css        = lookup(c, "ui_customization_css", null)
-    image_file = lookup(c, "ui_customization_image_file", null)
-    } if lookup(c, "ui_customization_css", null) != null || lookup(c, "ui_customization_image_file", null) != null
+    css        = try(c.ui_customization_css, null)
+    image_file = try(c.ui_customization_image_file, null)
+    } if try(c.ui_customization_css, null) != null || try(c.ui_customization_image_file, null) != null
   }
-
 }
 
 resource "aws_cognito_user_pool_ui_customization" "ui_customization" {
