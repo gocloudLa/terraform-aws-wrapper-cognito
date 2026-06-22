@@ -77,7 +77,7 @@ data "aws_security_group" "cognito_lambda" {
 module "cognito_lambdas" {
   for_each = local.cognito_lambdas
   source   = "terraform-aws-modules/lambda/aws"
-  version  = "8.7.0"
+  version  = "8.8.0"
 
   lambda_at_edge = false
 
